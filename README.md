@@ -6,4 +6,4 @@ made by **matwindow**!
 To Play The Game, 
 [***Click Here***](https://matwindow.github.io/Matblox/).
 ### Wiki
-[Official Matblox Wiki](https://matwindow.github.io/Matblox/wiki/)
+[***Official Matblox Wiki***](https://matwindow.github.io/Matblox/wiki/)
