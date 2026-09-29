@@ -8,9 +8,11 @@
         #canvas-container { display: flex; justify-content: center; margin: 20px; }
         #grid { display: grid; grid-template-columns: repeat(16, 25px); grid-template-rows: repeat(16, 25px); gap: 1px; background: #333; padding: 2px; }
         .pixel { width: 25px; height: 25px; background: #000; cursor: pointer; border: 1px solid #1a1a1a; }
-        .controls { margin: 20px; }
+        .controls { margin: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .slider-group { display: flex; align-items: center; gap: 10px; }
         input, button { padding: 10px; margin: 5px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; }
         button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; border: none; }
+        input[type="range"] { width: 150px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -18,9 +20,21 @@
     <h1>Matblox Texture Maker (.matimg)</h1>
     
     <div class="controls">
-        <label>Kolor (RRGGBB): <input type="color" id="colorPicker" value="#00ffff"></label>
-        <label>Świecenie (LL 00-FF): <input type="text" id="lumPicker" value="00" maxlength="2" style="width: 40px; text-align:center;"></label>
-        <label>Lustro (MM 00-FF): <input type="text" id="mirPicker" value="00" maxlength="2" style="width: 40px; text-align:center;"></label>
+        <div>
+            <label>Color (RRGGBB): <input type="color" id="colorPicker" value="#00ffff"></label>
+        </div>
+        
+        <div class="slider-group">
+            <label>Luminance (LL): </label>
+            <input type="range" id="lumSlider" min="0" max="255" value="0" oninput="updateLabel('lumLabel', this.value)">
+            <span id="lumLabel">00</span>
+        </div>
+
+        <div class="slider-group">
+            <label>Mirror (MM): </label>
+            <input type="range" id="mirSlider" min="0" max="255" value="0" oninput="updateLabel('mirLabel', this.value)">
+            <span id="mirLabel">00</span>
+        </div>
     </div>
 
     <div id="canvas-container">
@@ -28,48 +42,55 @@
     </div>
 
     <div class="controls">
-        <input type="text" id="filename" value="diamond" placeholder="Nazwa pliku"> .matimg
-        <br><br>
-        <button onclick="pobierzMatimg()">ZAPISZ JAKO .MATIMG</button>
+        <div>
+            <input type="text" id="filename" value="diamond" placeholder="File name"> .matimg
+        </div>
+        <button onclick="saveMatimg()">SAVE AS .MATIMG</button>
     </div>
 
     <script>
         const grid = document.getElementById('grid');
-        let pikseleData = Array(256).fill("#0000000000");
+        let pixelData = Array(256).fill("#0000000000");
+
+        function toHex(val) {
+            let hex = parseInt(val).toString(16).toUpperCase();
+            return hex.length < 2 ? "0" + hex : hex;
+        }
+
+        function updateLabel(id, val) {
+            document.getElementById(id).innerText = toHex(val);
+        }
 
         for (let i = 0; i < 256; i++) {
             const div = document.createElement('div');
             div.className = 'pixel';
             div.onclick = function() {
-                const kolorHex = document.getElementById('colorPicker').value;
-                let ll = document.getElementById('lumPicker').value.substring(0,2).toUpperCase();
-                let mm = document.getElementById('mirPicker').value.substring(0,2).toUpperCase();
-                
-                if(ll.length < 2) ll = "00";
-                if(mm.length < 2) mm = "00";
+                const hexColor = document.getElementById('colorPicker').value;
+                const ll = toHex(document.getElementById('lumSlider').value);
+                const mm = toHex(document.getElementById('mirSlider').value);
 
-                const pelnyKod = kolorHex.toUpperCase() + ll + mm;
+                const fullTag = hexColor.toUpperCase() + ll + mm;
                 
-                div.style.background = kolorHex;
-                pikseleData[i] = pelnyKod;
+                div.style.background = hexColor;
+                pixelData[i] = fullTag;
             };
             grid.appendChild(div);
         }
 
-        function pobierzMatimg() {
-            const nazwaPliku = document.getElementById('filename').value.trim() || 'texture';
+        function saveMatimg() {
+            const fileName = document.getElementById('filename').value.trim() || 'texture';
             
-            const strukturaPliku = {
+            const fileStructure = {
                 val: { scale: { x: 16, y: 16 }, values: ["r", "g", "b", "a", "l", "m"], encoding: "none" },
-                art: pikseleData
+                art: pixelData
             };
 
-            const tekstDoZapisu = JSON.stringify(strukturaPliku);
-            const plik = new Blob([tekstDoZapisu], { type: 'text/plain' });
+            const textToSave = JSON.stringify(fileStructure);
+            const blob = new Blob([textToSave], { type: 'text/plain' });
             
             const link = document.createElement('a');
-            link.href = URL.createObjectURL(plik);
-            link.download = nazwaPliku + '.matimg';
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName + '.matimg';
             link.click();
             
             URL.revokeObjectURL(link.href);
