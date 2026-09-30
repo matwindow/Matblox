@@ -14,6 +14,10 @@
         input, button, select { padding: 10px; margin: 5px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; }
         button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; border: none; }
         input[type="range"] { width: 150px; cursor: pointer; }
+        .quality-input { width: 50px; text-align: center; }
+        .checkbox-group { display: flex; gap: 15px; background: #1a1a1a; padding: 10px; border-radius: 6px; border: 1px solid #333; margin: 5px; }
+        .checkbox-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .checkbox-group input[type="checkbox"] { margin: 0; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -52,29 +56,46 @@
         <div>
             <input type="text" id="filename" value="diamond" placeholder="File name"> .matimg
             <select id="encodingSelect">
-                <option value="base65536" selected>base65536 (Super Recomended)</option>
-                <option value="base2">base2(Do Not Use That Plsssss)</option>
+                <option value="base64" selected>base64</option>
                 <option value="base16">base16(defalut and heavy)</option>
-                <option value="base26">base26</option>
-                <option value="base32">base32</option>
-                <option value="base36">base36</option>
-                <option value="base45">base45</option>
-                <option value="base58">base58</option>
-                <option value="base62">base62</option>
-                <option value="base64">base64</option>
+                <option value="base2">base2(Do Not Use That Plsssss)</option>
                 <option value="base64url">base64(url)</option>
-                <option value="base85">base85</option>
-                <option value="base91">base91</option>
-                <option value="base92">base92</option>
-                <option value="base122">Base122 (Recomended)</option>
             </select>
         </div>
+
+        <div>
+            <label>X Quality: <input type="number" id="xQuality" class="quality-input" value="16"></label>
+            <label>Y Quality: <input type="number" id="yQuality" class="quality-input" value="16"></label>
+            <label>Z Quality: <input type="number" id="zQuality" class="quality-input" value="16"></label>
+        </div>
+
+        <div>
+            <span>Scale Positions:</span>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="posX" value="x" checked> X</label>
+                <label><input type="checkbox" id="posY" value="y" checked> Y</label>
+                <label><input type="checkbox" id="posZ" value="z"> Z</label>
+            </div>
+        </div>
+
+        <div>
+            <span>Texture Values:</span>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="valR" value="r" checked> r</label>
+                <label><input type="checkbox" id="valG" value="g" checked> g</label>
+                <label><input type="checkbox" id="valB" value="b" checked> b</label>
+                <label><input type="checkbox" id="valA" value="a" checked> a</label>
+                <label><input type="checkbox" id="valL" value="l" checked> l</label>
+                <label><input type="checkbox" id="valM" value="m" checked> m</label>
+            </div>
+        </div>
+
         <button onclick="saveMatimg()">SAVE AS .MATIMG</button>
     </div>
 
     <script>
         const grid = document.getElementById('grid');
-        let pixelData = Array(256).fill("#000000000000");
+        let pixelData = Array(256).fill("000000000000");
         let isDrawing = false;
 
         window.addEventListener('mousedown', () => { isDrawing = true; });
@@ -106,7 +127,8 @@
             const ll = toHex(document.getElementById('lumSlider').value);
             const mm = toHex(document.getElementById('mirSlider').value);
 
-            const fullTag = hexColor.toUpperCase() + aa + ll + mm;
+            const cleanColor = hexColor.replace('#', '').toUpperCase();
+            const fullTag = cleanColor + aa + ll + mm;
             pixelData[index] = fullTag;
 
             const rgb = hexToRgb(hexColor);
@@ -131,55 +153,51 @@
             grid.appendChild(div);
         }
 
-        function encodeData(text, type) {
-            if (type === "base65536") {
-                let result = "";
-                for (let i = 0; i < text.length; i += 2) {
-                    let code1 = text.charCodeAt(i);
-                    let code2 = (i + 1 < text.length) ? text.charCodeAt(i + 1) : 0;
-                    let combined = (code1 << 8) | code2;
-                    result += String.fromCharCode(combined);
-                }
-                return result;
-            }
-            if (type === "base64" || type === "base64url") {
-                let b64 = btoa(unescape(encodeURIComponent(text)));
-                if (type === "base64url") {
-                    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+\$/, '');
-                }
-                return b64;
-            }
-            if (type === "base16") {
-                let hex = "";
-                for (let i = 0; i < text.length; i++) {
-                    hex += text.charCodeAt(i).toString(16).toUpperCase();
-                }
-                return hex;
-            }
-            if (type === "base2") {
-                let bin = "";
-                for (let i = 0; i < text.length; i++) {
-                    let b = text.charCodeAt(i).toString(2);
-                    bin += "0".repeat(8 - b.length) + b;
-                }
-                return bin;
-            }
-            return btoa(unescape(encodeURIComponent(text)));
-        }
-
         function saveMatimg() {
             const fileName = document.getElementById('filename').value.trim() || 'texture';
             const selectedEncoding = document.getElementById('encodingSelect').value;
             
-            const fileStructure = {
-                val: { scale: { x: 16, y: 16 }, values: ["r", "g", "b", "a", "l", "m"], encoding: selectedEncoding },
-                art: pixelData
-            };
+            const xQ = document.getElementById('xQuality').value || '16';
+            const yQ = document.getElementById('yQuality').value || '16';
+            const zQ = document.getElementById('zQuality').value || '16';
 
-            const jsonText = JSON.stringify(fileStructure);
-            const encodedText = encodeData(jsonText, selectedEncoding);
+            let selectedPos = [];
+            if (document.getElementById('posX').checked) selectedPos.push("x");
+            if (document.getElementById('posY').checked) selectedPos.push("y");
+            if (document.getElementById('posZ').checked) selectedPos.push("z");
 
-            const blob = new Blob([encodedText], { type: 'text/plain;charset=utf-16' });
+            let selectedValues = [];
+            if (document.getElementById('valR').checked) selectedValues.push("r");
+            if (document.getElementById('valG').checked) selectedValues.push("g");
+            if (document.getElementById('valB').checked) selectedValues.push("b");
+            if (document.getElementById('valA').checked) selectedValues.push("a");
+            if (document.getElementById('valL').checked) selectedValues.push("l");
+            if (document.getElementById('valM').checked) selectedValues.push("m");
+
+            let rawPixelsText = pixelData.join(",");
+            let encodedPixels = "";
+
+            if (selectedEncoding === "base64" || selectedEncoding === "base64url") {
+                encodedPixels = btoa(rawPixelsText);
+                if (selectedEncoding === "base64url") {
+                    encodedPixels = encodedPixels.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                }
+            } else if (selectedEncoding === "base16") {
+                encodedPixels = rawPixelsText;
+            } else if (selectedEncoding === "base2") {
+                for (let i = 0; i < rawPixelsText.length; i++) {
+                    let b = rawPixelsText.charCodeAt(i).toString(2);
+                    encodedPixels += "0".repeat(8 - b.length) + b;
+                }
+            }
+
+            let qualityString = xQ + "x" + yQ + "x" + zQ;
+            let posString = "[" + selectedPos.join(",") + "]";
+            let valuesString = "[" + selectedValues.join(",") + "]";
+
+            let finalText = "MATBLOX_MATIMG:" + qualityString + ":" + posString + ":" + valuesString + ":" + selectedEncoding + ":" + encodedPixels;
+
+            const blob = new Blob([finalText], { type: 'text/plain;charset=utf-8' });
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
