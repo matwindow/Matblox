@@ -52,8 +52,9 @@
         <div>
             <input type="text" id="filename" value="diamond" placeholder="File name"> .matimg
             <select id="encodingSelect">
+                <option value="base65536" selected>base65536 (Super Recomended)</option>
                 <option value="base2">base2(Do Not Use That Plsssss)</option>
-                <option value="base16" selected>base16(defalut and heavy)</option>
+                <option value="base16">base16(defalut and heavy)</option>
                 <option value="base26">base26</option>
                 <option value="base32">base32</option>
                 <option value="base36">base36</option>
@@ -66,7 +67,6 @@
                 <option value="base91">base91</option>
                 <option value="base92">base92</option>
                 <option value="base122">Base122 (Recomended)</option>
-                <option value="base65536">base65536 (Super Recomended)</option>
             </select>
         </div>
         <button onclick="saveMatimg()">SAVE AS .MATIMG</button>
@@ -132,6 +132,16 @@
         }
 
         function encodeData(text, type) {
+            if (type === "base65536") {
+                let result = "";
+                for (let i = 0; i < text.length; i += 2) {
+                    let code1 = text.charCodeAt(i);
+                    let code2 = (i + 1 < text.length) ? text.charCodeAt(i + 1) : 0;
+                    let combined = (code1 << 8) | code2;
+                    result += String.fromCharCode(combined);
+                }
+                return result;
+            }
             if (type === "base64" || type === "base64url") {
                 let b64 = btoa(unescape(encodeURIComponent(text)));
                 if (type === "base64url") {
@@ -169,7 +179,7 @@
             const jsonText = JSON.stringify(fileStructure);
             const encodedText = encodeData(jsonText, selectedEncoding);
 
-            const blob = new Blob([encodedText], { type: 'text/plain' });
+            const blob = new Blob([encodedText], { type: 'text/plain;charset=utf-16' });
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
