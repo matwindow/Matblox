@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Matblox Texture Maker</title>
+    <link rel="icon" type="image/png" href="dicon.png">
     <style>
-        body { background: #121212; color: #fff; font-family: sans-serif; text-align: center; }
+        body { background: #121212; color: #fff; font-family: sans-serif; text-align: center; user-select: none; }
         #canvas-container { display: flex; justify-content: center; margin: 20px; }
         #grid { display: grid; grid-template-columns: repeat(16, 25px); grid-template-rows: repeat(16, 25px); gap: 1px; background: #333; padding: 2px; }
         .pixel { width: 25px; height: 25px; background: rgba(0,0,0,0); cursor: pointer; border: 1px solid #1a1a1a; }
@@ -74,6 +75,10 @@
     <script>
         const grid = document.getElementById('grid');
         let pixelData = Array(256).fill("#000000000000");
+        let isDrawing = false;
+
+        window.addEventListener('mousedown', () => { isDrawing = true; });
+        window.addEventListener('mouseup', () => { isDrawing = false; });
 
         function toHex(val) {
             let hex = parseInt(val).toString(16).toUpperCase();
@@ -93,25 +98,36 @@
             };
         }
 
+        function drawPixel(div, index) {
+            const hexColor = document.getElementById('colorPicker').value;
+            const aaValue = document.getElementById('alphaSlider').value;
+            
+            const aa = toHex(aaValue);
+            const ll = toHex(document.getElementById('lumSlider').value);
+            const mm = toHex(document.getElementById('mirSlider').value);
+
+            const fullTag = hexColor.toUpperCase() + aa + ll + mm;
+            pixelData[index] = fullTag;
+
+            const rgb = hexToRgb(hexColor);
+            const alphaDecimal = aaValue / 255;
+            div.style.background = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alphaDecimal})`;
+        }
+
         for (let i = 0; i < 256; i++) {
             const div = document.createElement('div');
             div.className = 'pixel';
             
-            div.onclick = function() {
-                const hexColor = document.getElementById('colorPicker').value;
-                const aaValue = document.getElementById('alphaSlider').value;
-                
-                const aa = toHex(aaValue);
-                const ll = toHex(document.getElementById('lumSlider').value);
-                const mm = toHex(document.getElementById('mirSlider').value);
+            div.addEventListener('mousedown', function() {
+                drawPixel(div, i);
+            });
 
-                const fullTag = hexColor.toUpperCase() + aa + ll + mm;
-                pixelData[i] = fullTag;
+            div.addEventListener('mouseenter', function() {
+                if (isDrawing) {
+                    drawPixel(div, i);
+                }
+            });
 
-                const rgb = hexToRgb(hexColor);
-                const alphaDecimal = aaValue / 255;
-                div.style.background = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alphaDecimal})`;
-            };
             grid.appendChild(div);
         }
 
