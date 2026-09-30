@@ -7,8 +7,8 @@
     <style>
         body { background: #121212; color: #fff; font-family: sans-serif; text-align: center; user-select: none; }
         #canvas-container { display: flex; justify-content: center; margin: 20px; }
-        #grid { display: grid; grid-template-columns: repeat(16, 25px); grid-template-rows: repeat(16, 25px); gap: 1px; background: #333; padding: 2px; }
-        .pixel { width: 25px; height: 25px; background: rgba(0,0,0,0); cursor: pointer; border: 1px solid #1a1a1a; }
+        #grid { display: grid; gap: 1px; background: #333; padding: 2px; }
+        .pixel { background: rgba(0,0,0,0); cursor: pointer; border: 1px solid #1a1a1a; }
         .controls { margin: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .slider-group { display: flex; align-items: center; gap: 10px; }
         input, button, select { padding: 10px; margin: 5px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; }
@@ -18,6 +18,7 @@
         .checkbox-group { display: flex; gap: 15px; background: #1a1a1a; padding: 10px; border-radius: 6px; border: 1px solid #333; margin: 5px; }
         .checkbox-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
         .checkbox-group input[type="checkbox"] { margin: 0; cursor: pointer; }
+        #layerControl { background: #1a1a1a; padding: 10px; border-radius: 6px; border: 1px solid #333; margin: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -47,6 +48,10 @@
             <span id="mirLabel">FF</span>
         </div>
     </div>
+    <div id="layerControl">
+        <label>Current Layer (Z): <input type="range" id="layerSlider" min="0" max="15" value="0" oninput="changeLayer(this.value)"></label>
+        <span id="layerLabel">0</span>
+    </div>
 
     <div id="canvas-container">
         <div id="grid"></div>
@@ -64,17 +69,17 @@
         </div>
 
         <div>
-            <label>X Quality: <input type="number" id="xQuality" class="quality-input" value="16"></label>
-            <label>Y Quality: <input type="number" id="yQuality" class="quality-input" value="16"></label>
-            <label>Z Quality: <input type="number" id="zQuality" class="quality-input" value="16"></label>
+            <label>X Quality: <input type="number" id="xQuality" class="quality-input" value="16" onchange="updateGridDimensions()"></label>
+            <label>Y Quality: <input type="number" id="yQuality" class="quality-input" value="16" onchange="updateGridDimensions()"></label>
+            <label>Z Quality: <input type="number" id="zQuality" class="quality-input" value="16" onchange="updateGridDimensions()"></label>
         </div>
 
         <div>
             <span>Scale Positions:</span>
             <div class="checkbox-group">
-                <label><input type="checkbox" id="posX" value="x" checked> X</label>
-                <label><input type="checkbox" id="posY" value="y" checked> Y</label>
-                <label><input type="checkbox" id="posZ" value="z"> Z</label>
+                <label><input type="checkbox" id="posX" value="x" checked onchange="updateGridDimensions()"> X</label>
+                <label><input type="checkbox" id="posY" value="y" checked onchange="updateGridDimensions()"> Y</label>
+                <label><input type="checkbox" id="posZ" value="z" onchange="updateGridDimensions()"> Z</label>
             </div>
         </div>
 
@@ -92,11 +97,14 @@
 
         <button onclick="saveMatimg()">SAVE AS .MATIMG</button>
     </div>
-
     <script>
         const grid = document.getElementById('grid');
-        let pixelData = Array(256).fill("000000000000");
+        let pixelData = {};
         let isDrawing = false;
+        let currentLayer = 0;
+        let currentCols = 16;
+        let currentRows = 16;
+        let currentLayersCount = 1;
 
         window.addEventListener('mousedown', () => { isDrawing = true; });
         window.addEventListener('mouseup', () => { isDrawing = false; });
@@ -119,6 +127,80 @@
             };
         }
 
+        function getPixelStyle(hexTag) {
+            if (!hexTag || hexTag === "000000000000") return "rgba(0,0,0,0)";
+            let rgb = hexToRgb("#" + hexTag.substring(0, 6));
+            let alphaDecimal = parseInt(hexTag.substring(6, 8), 16) / 255;
+            return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alphaDecimal})`;
+        }
+
+        function updateGridDimensions() {
+            let hasX = document.getElementById('posX').checked;
+            let hasY = document.getElementById('posY').checked;
+            let hasZ = document.getElementById('posZ').checked;
+
+            let xQ = parseInt(document.getElementById('xQuality').value) || 16;
+            let yQ = parseInt(document.getElementById('yQuality').value) || 16;
+            let zQ = parseInt(document.getElementById('zQuality').value) || 16;
+
+            currentCols = hasX ? xQ : 1;
+            currentRows = hasY ? yQ : 1;
+            currentLayersCount = hasZ ? zQ : 1;
+
+            if (hasZ && zQ > 1) {
+                document.getElementById('layerControl').style.display = "block";
+                document.getElementById('layerSlider').max = zQ - 1;
+                if (currentLayer >= zQ) {
+                    currentLayer = zQ - 1;
+                    document.getElementById('layerSlider').value = currentLayer;
+                }
+                document.getElementById('layerLabel').innerText = currentLayer;
+            } else {
+                document.getElementById('layerControl').style.display = "none";
+                currentLayer = 0;
+            }
+
+            buildGrid();
+        }
+
+        function buildGrid() {
+            grid.innerHTML = "";
+            grid.style.gridTemplateColumns = `repeat(${currentCols}, 25px)`;
+            grid.style.gridTemplateRows = `repeat(${currentRows}, 25px)`;
+
+            let totalPixels = currentCols * currentRows;
+            for (let i = 0; i < totalPixels; i++) {
+                const div = document.createElement('div');
+                div.className = 'pixel';
+                div.style.width = '25px';
+                div.style.height = '25px';
+
+                let dataKey = currentLayer + "_" + i;
+                if (!pixelData[dataKey]) {
+                    pixelData[dataKey] = "000000000000";
+                }
+                div.style.background = getPixelStyle(pixelData[dataKey]);
+
+                div.addEventListener('mousedown', function() {
+                    drawPixel(div, i);
+                });
+
+                div.addEventListener('mouseenter', function() {
+                    if (isDrawing) {
+                        drawPixel(div, i);
+                    }
+                });
+
+                grid.appendChild(div);
+            }
+        }
+
+        function changeLayer(val) {
+            currentLayer = parseInt(val);
+            document.getElementById('layerLabel').innerText = currentLayer;
+            buildGrid();
+        }
+
         function drawPixel(div, index) {
             const hexColor = document.getElementById('colorPicker').value;
             const aaValue = document.getElementById('alphaSlider').value;
@@ -129,28 +211,13 @@
 
             const cleanColor = hexColor.replace('#', '').toUpperCase();
             const fullTag = cleanColor + aa + ll + mm;
-            pixelData[index] = fullTag;
+            
+            let dataKey = currentLayer + "_" + index;
+            pixelData[dataKey] = fullTag;
 
             const rgb = hexToRgb(hexColor);
             const alphaDecimal = aaValue / 255;
             div.style.background = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alphaDecimal})`;
-        }
-
-        for (let i = 0; i < 256; i++) {
-            const div = document.createElement('div');
-            div.className = 'pixel';
-            
-            div.addEventListener('mousedown', function() {
-                drawPixel(div, i);
-            });
-
-            div.addEventListener('mouseenter', function() {
-                if (isDrawing) {
-                    drawPixel(div, i);
-                }
-            });
-
-            grid.appendChild(div);
         }
 
         function saveMatimg() {
@@ -174,7 +241,16 @@
             if (document.getElementById('valL').checked) selectedValues.push("l");
             if (document.getElementById('valM').checked) selectedValues.push("m");
 
-            let rawPixelsText = pixelData.join(",");
+            let exportArray = [];
+            for (let z = 0; z < currentLayersCount; z++) {
+                let layerSize = currentCols * currentRows;
+                for (let i = 0; i < layerSize; i++) {
+                    let key = z + "_" + i;
+                    exportArray.push(pixelData[key] || "000000000000");
+                }
+            }
+
+            let rawPixelsText = exportArray.join(",");
             let encodedPixels = "";
 
             if (selectedEncoding === "base64" || selectedEncoding === "base64url") {
@@ -206,6 +282,8 @@
             
             URL.revokeObjectURL(link.href);
         }
+
+        updateGridDimensions();
     </script>
 
 </body>
