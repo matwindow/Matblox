@@ -10,7 +10,7 @@
         .pixel { width: 25px; height: 25px; background: rgba(0,0,0,0); cursor: pointer; border: 1px solid #1a1a1a; }
         .controls { margin: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .slider-group { display: flex; align-items: center; gap: 10px; }
-        input, button { padding: 10px; margin: 5px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; }
+        input, button, select { padding: 10px; margin: 5px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; }
         button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; border: none; }
         input[type="range"] { width: 150px; cursor: pointer; }
     </style>
@@ -50,6 +50,23 @@
     <div class="controls">
         <div>
             <input type="text" id="filename" value="diamond" placeholder="File name"> .matimg
+            <select id="encodingSelect">
+                <option value="base2">base2(Do Not Use That Plsssss)</option>
+                <option value="base16" selected>base16(defalut and heavy)</option>
+                <option value="base26">base26</option>
+                <option value="base32">base32</option>
+                <option value="base36">base36</option>
+                <option value="base45">base45</option>
+                <option value="base58">base58</option>
+                <option value="base62">base62</option>
+                <option value="base64">base64</option>
+                <option value="base64url">base64(url)</option>
+                <option value="base85">base85</option>
+                <option value="base91">base91</option>
+                <option value="base92">base92</option>
+                <option value="base122">Base122 (Recomended)</option>
+                <option value="base65536">base65536 (Super Recomended)</option>
+            </select>
         </div>
         <button onclick="saveMatimg()">SAVE AS .MATIMG</button>
     </div>
@@ -98,16 +115,45 @@
             grid.appendChild(div);
         }
 
+        function encodeData(text, type) {
+            if (type === "base64" || type === "base64url") {
+                let b64 = btoa(unescape(encodeURIComponent(text)));
+                if (type === "base64url") {
+                    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+\$/, '');
+                }
+                return b64;
+            }
+            if (type === "base16") {
+                let hex = "";
+                for (let i = 0; i < text.length; i++) {
+                    hex += text.charCodeAt(i).toString(16).toUpperCase();
+                }
+                return hex;
+            }
+            if (type === "base2") {
+                let bin = "";
+                for (let i = 0; i < text.length; i++) {
+                    let b = text.charCodeAt(i).toString(2);
+                    bin += "0".repeat(8 - b.length) + b;
+                }
+                return bin;
+            }
+            return btoa(unescape(encodeURIComponent(text)));
+        }
+
         function saveMatimg() {
             const fileName = document.getElementById('filename').value.trim() || 'texture';
+            const selectedEncoding = document.getElementById('encodingSelect').value;
             
             const fileStructure = {
-                val: { scale: { x: 16, y: 16 }, values: ["r", "g", "b", "a", "l", "m"], encoding: "none" },
+                val: { scale: { x: 16, y: 16 }, values: ["r", "g", "b", "a", "l", "m"], encoding: selectedEncoding },
                 art: pixelData
             };
 
-            const textToSave = JSON.stringify(fileStructure);
-            const blob = new Blob([textToSave], { type: 'text/plain' });
+            const jsonText = JSON.stringify(fileStructure);
+            const encodedText = encodeData(jsonText, selectedEncoding);
+
+            const blob = new Blob([encodedText], { type: 'text/plain' });
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
