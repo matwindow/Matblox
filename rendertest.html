@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatRenderer 3D Test</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #111;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        canvas {
+            border: 2px solid #444;
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>MatRenderer 3D Game Window</h1>
+    
+    <!-- The canvas matching the ID your library looks for -->
+    <canvas id="webgl2" width="800" height="600"></canvas>
+
+    <!-- Initializing your library as an ES Module -->
+    <script type="module">
+        import * as MatR from './lib/MatRender.js';
+
+        console.log("MatRenderer fully loaded:", MatR);
+        
+        // Your library will automatically look for 'webgl2' and initialize now!
+    </script>
+
+</body>
+</html>
