@@ -23,21 +23,23 @@
 
     <canvas id="webgl2" width="800" height="600"></canvas>
 
-    <script type="module">
+        <script type="module">
         import * as MatR from './lib/MatRender.js';
 
-        const myGradient = MatR.color.grad({pos: {max: 100, min: 0}}, [
-            {pos: 0, color: MatR.color.convert({from: "RGB", to: "HEX"}, 0, 0, 0)},
-            {pos: 100, color: MatR.color.convert({from: "RGB", to: "HEX"}, 255, 255, 255)}
-        ]);
+        window.onload = function() {
+            const myGradient = MatR.color.grad({pos: {max: 100, min: 0}}, [
+                {pos: 0, color: MatR.color.convert({from: "RGB", to: "HEX"}, 0, 0, 0)},
+                {pos: 100, color: MatR.color.convert({from: "RGB", to: "HEX"}, 255, 255, 255)}
+            ]);
 
-        const trianglePoints = [
-            [0.0, 0.5, 0.0],
-            [-0.5, -0.5, 0.0],
-            [0.5, -0.5, 0.0]
-        ];
+            const trianglePoints = [
+                [0.0, 0.5, 0.0],
+                [-0.5, -0.5, 0.0],
+                [0.5, -0.5, 0.0]
+            ];
 
-        MatR.shape.draw(MatR.shape.fill, myGradient, trianglePoints);
+            MatR.shape.draw(MatR.shape.fill, myGradient, trianglePoints);
+        };
     </script>
 
 </body>
