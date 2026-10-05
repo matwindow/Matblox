@@ -23,7 +23,7 @@
 
     <canvas id="webgl2" width="800" height="600"></canvas>
 
-        <script type="module">
+           <script type="module">
         import * as MatR from './lib/MatRender.js';
 
         window.onload = function() {
@@ -38,9 +38,17 @@
                 [0.5, -0.5, 0.0]
             ];
 
-            MatR.shape.draw(MatR.shape.fill, myGradient, trianglePoints);
+         
+            function loop() {
+                MatR.shape.draw(MatR.shape.fill, myGradient, trianglePoints);
+                requestAnimationFrame(loop);
+            }
+
+            // Uruchomienie pętli
+            loop();
         };
     </script>
+
 
 </body>
 </html>
