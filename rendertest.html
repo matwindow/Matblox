@@ -22,12 +22,12 @@
 </head>
 <body>
 
-    <!-- MAKE SURE THERE IS ONLY ONE CANVAS TAG HERE -->
     <canvas id="webgl2" width="800" height="600"></canvas>
 
     <script type="module">
         import * as MatR from './lib/MatRender.js';
-
+        console.log("Correctly Loaded WebGL!: "+gl)
+        console.log("Correctly Loaded MatR!: "+MatR)
         window.onload = function() {
             const myGradient = MatR.color.grad({pos: {max: 1.0, min: -1.0}}, [
                 {pos: -1.0, color: MatR.color.convert({from: "RGB", to: "HEX"}, 0, 0, 0)},
@@ -40,12 +40,10 @@
                 [0.5, -0.5, 0.0]
             ];
 
-            function loop() {
+            // Using your clean global MatR.loop directly!
+            MatR.loop(function() {
                 MatR.shape.draw(MatR.shape.fill, myGradient, trianglePoints);
-                requestAnimationFrame(loop);
-            }
-
-            loop();
+            });
         };
     </script>
 
