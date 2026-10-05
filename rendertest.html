@@ -1,33 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="icon.png">
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MatRenderer Test</title>
-    <style>
-        body {
-            margin: 0;
-            background-color: #111;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        canvas {
-            border: 1px solid #555;
-            background-color: #000;
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="webgl2" width="800" height="600"></canvas>
-
-           <!DOCTYPE html>
-<html lang="en">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MatRenderer Test</title>
@@ -49,13 +22,13 @@
 </head>
 <body>
 
+    <!-- MAKE SURE THERE IS ONLY ONE CANVAS TAG HERE -->
     <canvas id="webgl2" width="800" height="600"></canvas>
 
     <script type="module">
         import * as MatR from './lib/MatRender.js';
 
         window.onload = function() {
-            // Using WebGL coordinates system bounds (-1 to 1) for the positions
             const myGradient = MatR.color.grad({pos: {max: 1.0, min: -1.0}}, [
                 {pos: -1.0, color: MatR.color.convert({from: "RGB", to: "HEX"}, 0, 0, 0)},
                 {pos: 1.0, color: MatR.color.convert({from: "RGB", to: "HEX"}, 255, 255, 255)}
@@ -78,5 +51,3 @@
 
 </body>
 </html>
-
-
