@@ -3,39 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MatRenderer 3D Test</title>
+    <title>MatRenderer Test</title>
     <style>
         body {
             margin: 0;
             background-color: #111;
-            color: #fff;
-            font-family: sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
         }
         canvas {
-            border: 2px solid #444;
+            border: 1px solid #555;
             background-color: #000;
         }
     </style>
 </head>
 <body>
 
-    <h1>MatRenderer 3D Game Window</h1>
-    
-    <!-- The canvas matching the ID your library looks for -->
     <canvas id="webgl2" width="800" height="600"></canvas>
 
-    <!-- Initializing your library as an ES Module -->
     <script type="module">
         import * as MatR from './lib/MatRender.js';
 
-        console.log("MatRenderer fully loaded:", MatR);
-        
-        // Your library will automatically look for 'webgl2' and initialize now!
+        const myGradient = MatR.color.grad({pos: {max: 100, min: 0}}, [
+            {pos: 0, color: MatR.color.convert({from: "RGB", to: "HEX"}, 0, 0, 0)},
+            {pos: 100, color: MatR.color.convert({from: "RGB", to: "HEX"}, 255, 255, 255)}
+        ]);
+
+        const trianglePoints = [
+            [0.0, 0.5, 0.0],
+            [-0.5, -0.5, 0.0],
+            [0.5, -0.5, 0.0]
+        ];
+
+        MatR.shape.draw(MatR.shape.fill, myGradient, trianglePoints);
     </script>
 
 </body>
